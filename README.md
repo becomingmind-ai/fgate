@@ -43,6 +43,32 @@ python3 fgate/fgate.py compare BASELINE_EVAL CANDIDATE_EVAL COMPARISON
 python3 fgate/fgate.py finalize PROJECT TASK PACKET WORKER_RESULT SOL_PACKET
 ```
 
+### 让 Codex 在你的项目里使用 Fgate
+
+从项目根目录下载本仓库到 `./fgate`，然后让 Codex 读取 `fgate/README.md` 与
+`fgate/WORKFLOW.md`。普通的 Luna High 开发任务推荐 Lite：Luna 直接实现、测试和自审，
+Fgate 只保留冻结范围、确定性检查和 Sol EXIT packet。
+
+可直接把下面提示词发给 Codex：
+
+```text
+在当前项目启用本地 ./fgate 的 Luna Lite 工作流。先读取 ./fgate/README.md 和
+./fgate/WORKFLOW.md；为本任务在项目内创建或更新 Fgate project/task JSON，冻结目标、
+允许修改范围、hard gate、检查和 requires_weight_reload。
+
+将 Luna High 作为 Codex 子 Agent 完成实现、测试和自审。不要使用 DeepSeek endpoint Harness。
+完成后生成与 frozen packet_sha256 绑定的 fgate-lite-handoff-v1，依次运行 import-worker、
+checks 和 finalize（Lite 不使用 cheap Reviewer）。把紧凑 Sol Gate packet、diff、测试结果、
+风险和未决项交给主 Agent 做一次 EXIT 审核。
+
+不自动重试；首次失败只允许一次精确返工。再次失败、证据冲突、hard gate 异常、模型卡住，或
+CUDA/NCCL/ABI、四节点和高风险任务，立即交给 Sol/主 Agent 接管。
+```
+
+对本地 endpoint 或能力不稳定的模型，使用 Full：执行 `run-worker`、`checks`、`review` 和
+带 `--review` 的 `finalize`。示例 `examples/dgx-project.json` 是 DGX 项目参考，不应原样复制到
+其他项目；替换其中的 workspace、Worker、Reviewer、检查和 Harness 文件即可。
+
 ### Harness 进化
 
 Harness 是受 SHA 指纹和 Git 保护的普通项目文件。候选改进必须重放相关历史案例；任何受保护
@@ -85,6 +111,35 @@ For a Codex-native subagent such as Luna, set the Worker profile to
 `provider=codex-subagent` and `workflow=lite`. Codex orchestrates the Worker directly;
 `import-worker` imports its packet-bound structured handoff, deterministic checks run normally,
 and Fgate creates the Sol EXIT packet without invoking a local-model harness or cheap Reviewer.
+
+## Human quick start: use Fgate through Codex
+
+Clone this repository into your project as `./fgate`, then ask Codex to read `fgate/README.md`
+and `fgate/WORKFLOW.md`. For ordinary Luna High work, use Lite: Luna implements, tests, and
+self-reviews directly; Fgate keeps only scope freezing, deterministic checks, and the Sol EXIT
+packet.
+
+Send this prompt to Codex:
+
+```text
+Enable the local ./fgate Luna Lite workflow for this project. First read ./fgate/README.md and
+./fgate/WORKFLOW.md. Create or update Fgate project/task JSON for this task in the project, and
+freeze the objective, allowed change scope, hard gates, checks, and requires_weight_reload.
+
+Use Luna High as a Codex subagent for implementation, tests, and self-review. Do not use the
+DeepSeek endpoint Harness. When it finishes, create an fgate-lite-handoff-v1 bound to the frozen
+packet_sha256; run import-worker, checks, then finalize without a cheap Reviewer. Give the main
+Agent one compact Sol Gate packet with the diff, test results, risks, and open issues for EXIT
+review.
+
+Do not retry automatically. Allow one precise rework after the first failure only. Escalate a
+second failure, evidence conflict, hard-gate anomaly, model loop, or CUDA/NCCL/ABI, four-node,
+or other high-risk work to Sol/the main Agent immediately.
+```
+
+For local endpoints or less reliable models, use Full: `run-worker`, `checks`, `review`, and
+`finalize --review`. `examples/dgx-project.json` is a DGX reference, not a drop-in configuration:
+replace its workspace, Worker, Reviewer, checks, and Harness files for your project.
 
 ## Model contract
 
