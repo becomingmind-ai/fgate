@@ -1,0 +1,34 @@
+{
+  "schema": "fgate-task-v1",
+  "id": "dgx-fgate-v2-smoke-v1",
+  "objective": "Audit the reusable Fgate Worker/Reviewer/Sol boundary and report only evidence-backed defects; do not modify files or operate the four-node cluster.",
+  "hard_gates": [
+    "the cheap Worker cannot decide final PASS",
+    "the cheap Reviewer runs with fresh context and only recommends PASS, REWORK, or ESCALATE",
+    "deterministic check failure cannot produce a ready-for-Sol decision packet",
+    "blocked, looping, malformed, or uncertain cheap-model output routes to Sol assistance",
+    "high-risk work routes to deep Sol review"
+  ],
+  "constraints": [
+    "preserve existing Fgate v1 evidence and behavior",
+    "no four-node action, weight load, service change, or R6 Gate transition"
+  ],
+  "context": [
+    {"path": "fgate/fgate.py", "start_line": 1, "end_line": 400},
+    {"path": "fgate/fgate.py", "start_line": 401, "end_line": 800},
+    {"path": "fgate/test_fgate.py", "start_line": 1, "end_line": 260},
+    {"path": "fgate/README.md", "start_line": 1, "end_line": 220}
+  ],
+  "checks": ["fgate_v2_self_test", "fgate_v1_regression", "python_compile"],
+  "risk": "low",
+  "worker_mode": "read_only",
+  "requires_weight_reload": false,
+  "real_experiment": {
+    "status": "not_run",
+    "four_node_actions": false
+  },
+  "lifecycle": {
+    "automatic_retry": false,
+    "cluster_state_changed": false
+  }
+}

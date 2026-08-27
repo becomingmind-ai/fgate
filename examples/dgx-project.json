@@ -1,0 +1,59 @@
+{
+  "schema": "fgate-project-v1",
+  "project": "dgx",
+  "workspace": "../..",
+  "supervisor": "codex-default",
+  "active_worker": "deepseek-v4-worker",
+  "workers": {
+    "luna-high-lite": {
+      "provider": "codex-subagent",
+      "model_id": "gpt-5.6-luna",
+      "workflow": "lite"
+    },
+    "deepseek-v4-worker": {
+      "model_id": "DeepSeek-V4-Flash",
+      "command": [
+        "python3",
+        "scripts/models/deepseek-v4-agent-harness.py",
+        "--task",
+        "{input}",
+        "--output",
+        "{output}"
+      ],
+      "timeout_seconds": 900
+    }
+  },
+  "active_reviewer": "deepseek-v4-reviewer",
+  "reviewers": {
+    "deepseek-v4-reviewer": {
+      "model_id": "DeepSeek-V4-Flash",
+      "command": [
+        "python3",
+        "scripts/models/deepseek-v4-agent-harness.py",
+        "--task",
+        "{input}",
+        "--output",
+        "{output}"
+      ],
+      "timeout_seconds": 900
+    }
+  },
+  "checks": {
+    "fgate_v2_self_test": ["python3", "fgate/test_fgate.py"],
+    "python_compile": [
+      "python3",
+      "-m",
+      "py_compile",
+      "fgate/fgate.py",
+      "fgate/test_fgate.py",
+      "scripts/models/deepseek-v4-agent-harness.py"
+    ]
+  },
+  "harness": ["AGENTS.md", "fgate/WORKFLOW.md"],
+  "policy": {
+    "automatic_retry": false,
+    "max_rework": 1,
+    "codex_gate_required": true
+  },
+  "requires_weight_reload": false
+}
